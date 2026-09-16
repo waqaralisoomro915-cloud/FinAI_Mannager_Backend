@@ -19,15 +19,13 @@ from django.urls import path,include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('',include('apps.accounts.urls')),
-    path('',include('apps.ai_assistance.urls')),
-    path('',include('apps.budgets.urls')),
-    path('',include('apps.categories.urls')),
-    path('',include('apps.common.urls')),
-    path('',include('apps.notifications.urls')),
-    path('',include('apps.reports.urls')),
-    path('',include('apps.savings.urls')),
-    path('',include('apps.transactions.urls')),
-    path('',include('apps.wallets.urls')),
+    path("api/v1/wallets/", include("apps.wallets.urls")),
+    path("api/v1/categories/", include("apps.categories.urls")),
+    path("api/v1/transactions/", include("apps.transactions.urls")),
+    path("api/v1/budgets/", include("apps.budgets.urls")),
+    path("api/v1/savings/", include("apps.savings.urls")),
+    path("api/v1/reports/", include("apps.reports.urls")),
+    path("api/v1/notifications/", include("apps.notifications.urls")),
+    path("api/v1/ai-assistance/", include("apps.ai_assistance.urls")),
 
 ]
