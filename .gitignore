@@ -38,6 +38,7 @@ venv.bak/
 # =========================
 *.log
 local_settings.py
+private_reports/
 db.sqlite3
 db.sqlite3-journal
 /media/

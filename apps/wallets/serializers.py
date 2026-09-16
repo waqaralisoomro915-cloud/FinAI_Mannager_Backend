@@ -5,6 +5,8 @@ from .models import Wallet
 
 class WalletSerializer(serializers.ModelSerializer):
     current_balance = serializers.SerializerMethodField()
+    reserved_balance = serializers.SerializerMethodField()
+    available_balance = serializers.SerializerMethodField()
 
     class Meta:
         model = Wallet
@@ -17,6 +19,8 @@ class WalletSerializer(serializers.ModelSerializer):
             "currency",
             "opening_balance",
             "current_balance",
+            "reserved_balance",
+            "available_balance",
             "is_active",
             "created_at",
             "updated_at",
@@ -34,6 +38,18 @@ class WalletSerializer(serializers.ModelSerializer):
         from ..transactions.services import wallet_balance
 
         return format(wallet_balance(obj), ".2f")
+
+    def get_reserved_balance(self, obj):
+        from ..savings.services import wallet_reserved
+
+        return format(wallet_reserved(obj), ".2f")
+
+    def get_available_balance(self, obj):
+        from ..savings.services import wallet_reserved
+        from ..transactions.services import wallet_balance
+
+        available = wallet_balance(obj) - wallet_reserved(obj)
+        return format(available, ".2f")
 
     def validate_name(self, value):
         value = value.strip()

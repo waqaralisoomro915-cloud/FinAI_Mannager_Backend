@@ -6,9 +6,9 @@ from django.db.models import Q, Sum
 from django.utils import timezone
 
 from rest_framework.exceptions import NotFound, ValidationError
-
-from apps.categories.models import Category
-from apps.wallets.models import Wallet
+from ..savings.services import wallet_reserved
+from ..categories.models import Category
+from ..wallets.models import Wallet
 
 from .models import Transaction
 
@@ -91,6 +91,8 @@ def create_transaction(user, data):
     transaction_type = data["transaction_type"]
     amount = data["amount"]
 
+
+
     if amount <= ZERO:
         raise ValidationError({"amount": "Amount must be positive."})
 
@@ -172,9 +174,14 @@ def create_transaction(user, data):
             })
 
     if transaction_type in ("EXPENSE", "TRANSFER"):
-        if amount > wallet_balance(source):
+        available = wallet_balance(source) - wallet_reserved(source)
+
+        if amount > available:
             raise ValidationError({
-                "amount": "Insufficient wallet balance."
+                "amount": (
+                    "Insufficient available balance. "
+                    "Some money may be reserved for savings."
+                )
             })
 
     return Transaction.objects.create(
@@ -217,11 +224,11 @@ def void_transaction(user, transaction_id, reason):
             exclude_transaction_id=entry.pk,
         )
 
-        if resulting_balance < ZERO:
+        if resulting_balance < wallet_reserved(wallet):
             raise ValidationError({
                 "detail": (
                     "Cannot void this transaction because an affected "
-                    "wallet would have a negative balance."
+                    "wallet would lack enough money to cover its savings."
                 )
             })
 
