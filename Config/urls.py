@@ -16,18 +16,19 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path,include
-
+# after every url I have written done its purpose is to know which app has been cleared and which urls has been created
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/v1/', include('apps.accounts.urls')),
-    path('api/v1/', include('apps.wallets.urls')),
-    path("api/v1/wallets/", include("apps.wallets.urls")),
-    path("api/v1/categories/", include("apps.categories.urls")),
+    path("admin/", admin.site.urls),
+
+    path("api/v1/", include("apps.accounts.urls")),  # done
+    path("api/v1/wallets/", include("apps.wallets.urls")),  # done
+    path("api/v1/categories/", include("apps.categories.urls")),  # done
+
     path("api/v1/transactions/", include("apps.transactions.urls")),
     path("api/v1/budgets/", include("apps.budgets.urls")),
     path("api/v1/savings/", include("apps.savings.urls")),
     path("api/v1/reports/", include("apps.reports.urls")),
     path("api/v1/notifications/", include("apps.notifications.urls")),
     path("api/v1/ai-assistance/", include("apps.ai_assistance.urls")),
-
 ]
+
