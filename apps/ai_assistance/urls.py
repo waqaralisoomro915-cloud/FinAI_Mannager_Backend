@@ -1,5 +1,10 @@
 from django.urls import path
-from . import views
+
+from .views import SpendingInsightView
+
+
+app_name = "ai_assistance"
+
 urlpatterns = [
-    path('ai-assistance/',views.ai_assistance,name='ai_assistance'),
+    path("",SpendingInsightView.as_view(),name="spending-insights",),
 ]

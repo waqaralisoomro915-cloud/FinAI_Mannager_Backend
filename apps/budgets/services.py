@@ -4,14 +4,15 @@ from django.db import transaction
 from rest_framework.exceptions import NotFound, ValidationError
 
 from ..categories.models import Category
+from ..notifications.services import notify_budget
 
 from .models import Budget
 
 
 @transaction.atomic
 def save_budget(user, data, instance=None):
-    # Keeps overlapping-budget checks consistent during
-    # concurrent writes on PostgreSQL.
+    # Serialize budget writes for this user on databases
+    # that support SELECT FOR UPDATE.
     get_user_model().objects.select_for_update().get(pk=user.pk)
 
     if instance is not None:
@@ -42,9 +43,10 @@ def save_budget(user, data, instance=None):
     )
 
     if category is None:
-        raise ValidationError({"category": "Select a category."})
+        raise ValidationError({
+            "category": "Select a category."
+        })
 
-    # Read the category again under a lock.
     category = (
         Category.objects.select_for_update()
         .filter(
@@ -103,13 +105,16 @@ def save_budget(user, data, instance=None):
         })
 
     if instance is None:
-        return Budget.objects.create(
+        budget = Budget.objects.create(
             user=user,
             category=category,
             amount=amount,
             start_date=start_date,
             end_date=end_date,
         )
+
+        notify_budget(budget)
+        return budget
 
     instance.category = category
     instance.amount = amount
@@ -124,4 +129,5 @@ def save_budget(user, data, instance=None):
         "updated_at",
     ])
 
+    notify_budget(instance)
     return instance

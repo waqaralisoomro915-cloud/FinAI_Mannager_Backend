@@ -6,8 +6,10 @@ from django.db.models import Q, Sum
 from django.utils import timezone
 
 from rest_framework.exceptions import NotFound, ValidationError
-from ..savings.services import wallet_reserved
+
 from ..categories.models import Category
+from ..notifications.services import notify_expense_budgets
+from ..savings.services import wallet_reserved
 from ..wallets.models import Wallet
 
 from .models import Transaction
@@ -91,10 +93,10 @@ def create_transaction(user, data):
     transaction_type = data["transaction_type"]
     amount = data["amount"]
 
-
-
     if amount <= ZERO:
-        raise ValidationError({"amount": "Amount must be positive."})
+        raise ValidationError({
+            "amount": "Amount must be positive."
+        })
 
     if data["transaction_date"] > timezone.localdate():
         raise ValidationError({
@@ -108,6 +110,7 @@ def create_transaction(user, data):
 
     wallets = get_locked_wallets(user, wallet_ids)
     source = wallets[source_id]
+
     destination = (
         wallets[destination_id]
         if destination_id is not None
@@ -184,13 +187,19 @@ def create_transaction(user, data):
                 )
             })
 
-    return Transaction.objects.create(
+    entry = Transaction.objects.create(
         user=user,
         wallet=source,
         destination_wallet=destination,
         category=category,
         **data,
     )
+
+    # The helper checks expense budgets and prevents duplicate alerts.
+    # This runs inside the same database transaction.
+    notify_expense_budgets(entry)
+
+    return entry
 
 
 @db_transaction.atomic
